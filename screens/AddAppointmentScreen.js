@@ -1,11 +1,10 @@
-// src/screens/AddAppointmentScreen.js
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Button, TextInput, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 
-const AddAppointmentScreen = ({ navigation }) => {
+const AddAppointmentScreen = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(null);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
@@ -23,43 +22,71 @@ const AddAppointmentScreen = ({ navigation }) => {
     setDate(selectedDate);
   };
 
-  const handleSave = async () => {
-    if (!title || !date) {
-      // Handle validation here
-      return;
-    }
-
-    const newAppointment = {
-      id: Date.now(),
-      title,
-      date,
-    };
-
+  const handleAddAppointment = async () => {
     try {
+      if (!title || !date) {
+        // Add validation to check if title and date are provided
+        alert('Complete Details to contineue!!!.');
+        return;
+      }
+
+      // Create a new appointment object
+      const newAppointment = {
+        id: Math.random().toString(),
+        title: title,
+        date: date.toISOString(),
+      };
+
+      // Fetch existing appointments from AsyncStorage
       const existingAppointments = await AsyncStorage.getItem('appointments');
-      const appointments = existingAppointments
-        ? JSON.parse(existingAppointments)
-        : [];
+      const parsedAppointments = JSON.parse(existingAppointments) || [];
 
-      appointments.push(newAppointment);
+      // Add the new appointment to the list
+      const updatedAppointments = [...parsedAppointments, newAppointment];
 
-      await AsyncStorage.setItem('appointments', JSON.stringify(appointments));
+      // Save the updated appointments to AsyncStorage
+      await AsyncStorage.setItem('appointments', JSON.stringify(updatedAppointments));
 
-      navigation.navigate('Home');
+      // Call the callback function to notify HomeScreen
+      route.params.onAppointmentAdded();
+
+      // Navigate back to HomeScreen
+      navigation.goBack();
     } catch (error) {
-      console.error('Error saving data:', error);
+      console.error('Error adding appointment:', error);
     }
   };
 
+  useEffect(() => {
+    // Set the navigation options dynamically
+    navigation.setOptions({
+      headerRight: () => (
+        <Button
+          title="Save"
+          onPress={handleAddAppointment}
+          color="#e35622" // Change the background color
+          style={{
+            marginBottom: 10, // Add margin bottom
+            borderRadius: 30, // Add border radius
+          }}
+          titleStyle={{
+            color: "white",
+            fontWeight: "bold",
+          }}  />
+      ),
+    });
+  }, [title, date]);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Add Appointment</Text>
+      <Text style={styles.heading}>Add Task</Text>
       <TextInput
-        placeholder="Appointment Title"
-        onChangeText={(text) => setTitle(text)}
+        placeholder="Task Details"
         value={title}
+        onChangeText={(text) => setTitle(text)}
         style={styles.input}
       />
+
       <View style={styles.datePicker}>
         <Text>Date and Time: {date ? moment(date).format('LLL') : 'Not set'}</Text>
         <Button title="Pick Date and Time" onPress={showDatePicker} />
@@ -70,7 +97,6 @@ const AddAppointmentScreen = ({ navigation }) => {
           onCancel={hideDatePicker}
         />
       </View>
-      <Button title="Save" onPress={handleSave} />
     </View>
   );
 };
@@ -79,18 +105,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor:"#a573f0"
   },
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    color:"white"
   },
   input: {
-    marginBottom: 16,
-    padding: 10,
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
+    padding: 8,
+    marginBottom: 16,
   },
   datePicker: {
     marginBottom: 16,
