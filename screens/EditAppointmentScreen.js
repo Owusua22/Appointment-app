@@ -9,7 +9,7 @@ const EditAppointmentScreen = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(null);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const { appointment } = route.params;
+  const { appointment, onUpdate } = route.params;
 
   useEffect(() => {
     if (appointment) {
@@ -55,6 +55,9 @@ const EditAppointmentScreen = ({ navigation, route }) => {
 
       await AsyncStorage.setItem('appointments', JSON.stringify(updatedAppointments));
 
+      // Pass the updated data back to the HomeScreen
+      onUpdate(updatedAppointment);
+
       navigation.navigate('Home');
     } catch (error) {
       console.error('Error saving data:', error);
@@ -63,9 +66,9 @@ const EditAppointmentScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Edit Appointment</Text>
+      <Text style={styles.heading}>Edit Task</Text>
       <TextInput
-        placeholder="Appointment Title"
+        placeholder="Task Title"
         onChangeText={(text) => setTitle(text)}
         value={title}
         style={styles.input}
@@ -81,7 +84,15 @@ const EditAppointmentScreen = ({ navigation, route }) => {
           onCancel={hideDatePicker}
         />
       </View>
-      <Button title="Save" onPress={handleSave} />
+      <Button title="Save" onPress={handleSave} color="#e35622" // Change the background color
+          style={{
+            marginBottom: 10, // Add margin bottom
+            borderRadius: 30, // Add border radius
+          }}
+          titleStyle={{
+            color: "white",
+            fontWeight: "bold",
+          }}  />
     </View>
   );
 };
@@ -90,11 +101,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+   backgroundColor:"#a573f0"
   },
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    color:"white"
   },
   input: {
     marginBottom: 16,
